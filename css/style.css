@@ -354,7 +354,13 @@ p { margin: 0; }
 .reveal.in { opacity: 1; transform: none; }
 .player-btn.playing { animation: ring 1.4s ease-out infinite; }
 
+/* «Менше руху» в системі: лишаємо тільки м'які появи без зсуву, наближення та пульсації */
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .hero-copy > *, .hero-tags { animation-name: fade; }
+  .hero-media img, .player-btn.playing { animation: none; }
+  .hero-mark .mark-wave { animation: draw 1.6s .35s ease both; }
+  .reveal { transform: none; }
+  .svc-bg, .svc:hover .svc-bg { transform: none; }
 }

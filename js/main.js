@@ -58,7 +58,7 @@
 
   /* ---------- поява блоків при прокрутці ---------- */
   var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var io = (!calm && "IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
+  var io = ("IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       if (!e.isIntersecting) return;
       e.target.classList.add("in");
