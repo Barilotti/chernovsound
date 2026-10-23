@@ -46,6 +46,7 @@ content:
               values:
                 - { value: audio, label: Аудіофайл (mp3, wav) }
                 - { value: youtube, label: Відео з YouTube }
+                - { value: gdrive, label: Відео з Google Drive }
                 - { value: video, label: Відеофайл (mp4) }
           - name: audio
             label: Аудіо (готова робота)
@@ -58,6 +59,10 @@ content:
           - name: youtube
             label: Посилання на YouTube
             description: Заповніть, якщо «Що це» = Відео з YouTube
+            type: string
+          - name: gdrive
+            label: Посилання на Google Drive
+            description: "У Google Drive: Поділитися → Усі, хто має посилання → Копіювати посилання. Заповніть, якщо «Що це» = Відео з Google Drive"
             type: string
           - name: video
             label: Відеофайл

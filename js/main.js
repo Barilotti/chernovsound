@@ -126,6 +126,12 @@
     return m ? m[1] : null;
   }
 
+  // Посилання Google Drive: .../file/d/ID/view, ...?id=ID або просто ID
+  function driveId(link) {
+    var m = String(link || "").match(/(?:\/d\/|[?&]id=)([\w-]{20,})/) || String(link || "").match(/^([\w-]{20,})$/);
+    return m ? m[1] : null;
+  }
+
   function fmt(sec) {
     if (!isFinite(sec)) return "0:00";
     var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
@@ -265,6 +271,28 @@
       });
       box.appendChild(play);
       return [box];
+    }
+    if (item.type === "gdrive") {
+      var gid = driveId(item.gdrive);
+      var gbox = el("div", { class: "work-media" });
+      var gthumb = url(item.cover) || (gid ? "https://drive.google.com/thumbnail?id=" + gid + "&sz=w1280" : "");
+      if (gthumb) {
+        var gim = el("img", { src: gthumb, alt: "", loading: "lazy", referrerpolicy: "no-referrer" });
+        gim.addEventListener("error", function () { gim.remove(); });
+        gbox.appendChild(gim);
+      }
+      var gplay = el("button", { type: "button", class: "yt-play", "aria-label": t("portfolio.watch") }, [el("span", null, [icon("i-play")])]);
+      gplay.addEventListener("click", function () {
+        if (!gid) { window.open(item.gdrive, "_blank", "noopener"); return; }
+        if (currentAudio) currentAudio.pause();
+        gbox.innerHTML = "";
+        gbox.appendChild(el("iframe", {
+          src: "https://drive.google.com/file/d/" + gid + "/preview",
+          title: field(item, "title"), allow: "autoplay; fullscreen", allowfullscreen: ""
+        }));
+      });
+      gbox.appendChild(gplay);
+      return [gbox];
     }
     if (item.type === "video") {
       var attrs = { src: url(item.video), controls: "", preload: "metadata", playsinline: "" };
