@@ -9,7 +9,6 @@
       "type": "audio",
       "audio": "media/portfolio/demo-after.mp3",
       "audio_before": "media/portfolio/demo-before.mp3",
-      "youtube": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
       "description_uk": "Так виглядатиме трек з перемикачем «До / Після». Видаліть цей приклад, коли додасте свою роботу.",
       "description_en": "This is how a track with a Before / After switch looks.",
       "year": 2025,
@@ -22,7 +21,7 @@
         "voiceover"
       ],
       "type": "youtube",
-      "youtube": "https://www.youtube.com/watch?v=XXXXXXXXXXX",
+      "youtube": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
       "description_uk": "Вставте посилання на своє відео з YouTube.",
       "description_en": "Paste a link to your YouTube video.",
       "year": 2025,
