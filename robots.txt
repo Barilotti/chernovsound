@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://chernovsound.com/sitemap.xml
+Sitemap: https://barilotti.github.io/chernovsound/sitemap.xml

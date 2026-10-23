@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://chernovsound.com/</loc>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://chernovsound.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://chernovsound.com/?lang=en"/>
+    <loc>https://barilotti.github.io/chernovsound/</loc>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://barilotti.github.io/chernovsound/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://barilotti.github.io/chernovsound/?lang=en"/>
   </url>
   <url>
-    <loc>https://chernovsound.com/?lang=en</loc>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://chernovsound.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://chernovsound.com/?lang=en"/>
+    <loc>https://barilotti.github.io/chernovsound/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://barilotti.github.io/chernovsound/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://barilotti.github.io/chernovsound/?lang=en"/>
   </url>
 </urlset>
