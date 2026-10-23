@@ -22,6 +22,7 @@
       ],
       "type": "youtube",
       "youtube": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
+      "cover": "media/Саунд дизайн.jpg",
       "description_uk": "Вставте посилання на своє відео з YouTube.",
       "description_en": "Paste a link to your YouTube video.",
       "year": 2025,
