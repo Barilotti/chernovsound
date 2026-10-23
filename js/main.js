@@ -56,6 +56,41 @@
     try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) { return null; }
   }
 
+  /* ---------- поява блоків при прокрутці ---------- */
+  var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var io = (!calm && "IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("in");
+      io.unobserve(e.target);
+      if (e.target.matches("dt[data-count]")) countUp(e.target);
+    });
+  }, { rootMargin: "0px 0px -8% 0px" }) : null;
+
+  // Елементи з'являються по черзі всередині своєї групи
+  function reveal(nodes) {
+    if (!io) return;
+    nodes.forEach(function (n, i) {
+      n.classList.add("reveal");
+      n.style.setProperty("--d", (i % 6) * 0.08 + "s");
+      io.observe(n);
+    });
+  }
+
+  // Цифри в «Про мене» рахують від нуля: «100+» → 0…100+
+  function countUp(node) {
+    var m = node.dataset.count.match(/^(\D*)(\d+)(.*)$/);
+    if (!m) return;
+    var end = +m[2], t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var k = Math.min(1, (ts - t0) / 1400);
+      node.textContent = m[1] + Math.round(end * (1 - Math.pow(1 - k, 3))) + m[3];
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   /* ---------- мова ---------- */
   function initialLang() {
     var q = null;
@@ -200,6 +235,7 @@
     function setIcon(playing) {
       btn.innerHTML = ""; btn.appendChild(icon(playing ? "i-pause" : "i-play"));
       btn.setAttribute("aria-label", playing ? t("portfolio.pause") : t("portfolio.play"));
+      btn.classList.toggle("playing", playing);
     }
     function loadWave(src) { loadPeaks(src, 70).then(function (p) { peaks = p; redraw(); }); }
 
@@ -321,6 +357,7 @@
       if (desc) body.appendChild(el("p", { text: desc }));
       list.appendChild(el("article", { class: "work" }, mediaBlock(item).concat([body])));
     });
+    reveal($all(".work", list));
   }
 
   // Кнопки «Приклади робіт» у картках послуг вмикають потрібний фільтр
@@ -356,6 +393,7 @@
       if (r.link) children.push(el("a", { class: "review-link", href: r.link, target: "_blank", rel: "noopener", text: t("reviews.source") + " ↗" }));
       list.appendChild(el("article", { class: "review" }, children));
     });
+    reveal($all(".review", list));
   }
 
   /* ---------- про мене ---------- */
@@ -381,7 +419,12 @@
     var facts = (ABOUT.facts || []).filter(function (f) { return f && f.value; });
     if (facts.length) {
       text.appendChild(el("dl", { class: "facts" }, facts.map(function (f) {
-        return el("div", { class: "fact" }, [el("dt", { text: f.value }), el("dd", { text: field(f, "label") })]);
+        var dt = el("dt", { text: f.value });
+        if (io && /\d/.test(f.value)) {
+          dt.setAttribute("data-count", f.value);
+          dt.textContent = f.value.replace(/\d+/, "0");
+        }
+        return el("div", { class: "fact" }, [dt, el("dd", { text: field(f, "label") })]);
       })));
     }
 
@@ -398,6 +441,8 @@
     }
     box.appendChild(photo);
     box.appendChild(text);
+    reveal([photo, text]);
+    $all("dt[data-count]", box).forEach(function (d) { io.observe(d); });
   }
 
   /* ---------- соцмережі ---------- */
@@ -457,5 +502,9 @@
       ABOUT = res[3];
       renderSocials();
       applyLang(lang, false);
+      $all(".section-head").forEach(function (h) { reveal([h]); });
+      reveal($all(".svc"));
+      reveal($all(".why-row > *"));
+      reveal($all(".closing .quote"));
     });
 })();
