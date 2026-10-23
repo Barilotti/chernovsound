@@ -156,7 +156,7 @@ content:
         type: image
       - { name: name_uk, label: Ім'я (українською), type: string }
       - { name: name_en, label: Ім'я (англійською), type: string }
-      - { name: role_uk, label: "Підпис під ім'ям (українською), наприклад «Засновник CHERNOVsound · звукорежисер»", type: string }
+      - { name: role_uk, label: "Підпис під ім'ям (українською), наприклад «Звукорежисер»", type: string }
       - { name: role_en, label: Підпис під ім'ям (англійською), type: string }
       - name: text_uk
         label: Розповідь про себе (українською)
