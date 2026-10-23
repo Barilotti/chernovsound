@@ -1,0 +1,32 @@
+{
+  "demo": true,
+  "photo": "",
+  "text_uk": "Тут буде розповідь про вас: як ви прийшли у звук, скільки років працюєте, у яких напрямках і з якими проєктами.\n\nЗаповніть цей блок в адмінпанелі, додайте своє фото, і позначка «Приклад» зникне, коли ви вимкнете її там же.",
+  "text_en": "Your story goes here: how you got into sound, how long you've been working, which areas and projects.",
+  "facts": [
+    {
+      "value": "X+",
+      "label_uk": "років досвіду",
+      "label_en": "years of experience"
+    },
+    {
+      "value": "XX",
+      "label_uk": "проєктів",
+      "label_en": "projects"
+    },
+    {
+      "value": "6",
+      "label_uk": "напрямків роботи зі звуком",
+      "label_en": "areas of sound work"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Назва проєкту, студії або каналу",
+      "role_uk": "Що ви робили: зведення, озвучка, саунд-дизайн",
+      "role_en": "What you did: mixing, voiceover, sound design",
+      "year": "2025",
+      "link": ""
+    }
+  ]
+}

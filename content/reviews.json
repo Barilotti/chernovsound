@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "demo": true,
+      "name": "Ім'я клієнта",
+      "role_uk": "Тут буде, хто залишив відгук",
+      "role_en": "Who left the review",
+      "text_uk": "Це приклад того, як виглядатиме відгук на сайті. Замініть його на справжній в адмінпанелі.",
+      "text_en": "This is an example of how a review will look on the site.",
+      "rating": 5,
+      "service": "voiceover"
+    }
+  ]
+}

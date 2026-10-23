@@ -1,0 +1,192 @@
+# Налаштування адмінпанелі Pages CMS (https://pagescms.org).
+# Цей файл описує, які поля бачить Nick в адмінці. Сайт читає ті самі файли з content/.
+
+media:
+  input: media
+  output: media
+
+content:
+  - name: portfolio
+    label: Портфоліо
+    type: file
+    path: content/portfolio.json
+    fields:
+      - name: items
+        label: Роботи (нові додавайте нагору)
+        type: object
+        list: true
+        fields:
+          - name: title_uk
+            label: Назва (українською)
+            type: string
+            required: true
+          - name: title_en
+            label: Назва (англійською, необов'язково)
+            type: string
+          - name: service
+            label: Послуга
+            description: Можна обрати кілька
+            type: select
+            required: true
+            options:
+              multiple: true
+              values:
+                - { value: mixing, label: Зведення пісень }
+                - { value: dubmix, label: Зведення дубляжу }
+                - { value: sounddesign, label: Саунд-дизайн }
+                - { value: voiceover, label: Озвучка та дубляж }
+                - { value: podcast, label: Зведення подкастів }
+                - { value: ads, label: Реклама та комерція }
+          - name: type
+            label: Що це
+            type: select
+            required: true
+            default: audio
+            options:
+              values:
+                - { value: audio, label: Аудіофайл (mp3, wav) }
+                - { value: youtube, label: Відео з YouTube }
+                - { value: video, label: Відеофайл (mp4) }
+          - name: audio
+            label: Аудіо (готова робота)
+            description: Заповніть, якщо «Що це» = Аудіофайл
+            type: file
+          - name: audio_before
+            label: Аудіо «До обробки» (необов'язково)
+            description: Якщо додати, на сайті з'явиться перемикач До / Після
+            type: file
+          - name: youtube
+            label: Посилання на YouTube
+            description: Заповніть, якщо «Що це» = Відео з YouTube
+            type: string
+          - name: video
+            label: Відеофайл
+            description: Краще не більше 50 МБ. Великі відео викладайте на YouTube.
+            type: file
+          - name: cover
+            label: Обкладинка (необов'язково)
+            type: image
+          - name: description_uk
+            label: Опис (українською)
+            type: text
+          - name: description_en
+            label: Опис (англійською, необов'язково)
+            type: text
+          - name: year
+            label: Рік
+            type: number
+          - name: demo
+            label: Позначка «Приклад»
+            description: Вимкніть для своїх справжніх робіт
+            type: boolean
+            default: false
+
+  - name: reviews
+    label: Відгуки
+    type: file
+    path: content/reviews.json
+    fields:
+      - name: items
+        label: Відгуки (нові додавайте нагору)
+        type: object
+        list: true
+        fields:
+          - name: name
+            label: Ім'я клієнта або назва студії
+            type: string
+            required: true
+          - name: role_uk
+            label: Хто це (українською)
+            description: Наприклад, «Режисер короткометражки» або «YouTube-канал ...»
+            type: string
+          - name: role_en
+            label: Хто це (англійською, необов'язково)
+            type: string
+          - name: text_uk
+            label: Текст відгуку (українською)
+            type: text
+          - name: text_en
+            label: Текст відгуку (англійською, необов'язково)
+            type: text
+          - name: rating
+            label: Оцінка
+            type: select
+            default: "5"
+            options:
+              values: ["5", "4", "3", "2", "1"]
+          - name: photo
+            label: Фото клієнта (необов'язково)
+            type: image
+          - name: screenshot
+            label: Скриншот відгуку (необов'язково)
+            description: Наприклад, з Telegram або з фриланс-біржі
+            type: image
+          - name: link
+            label: Посилання на оригінал або проєкт (необов'язково)
+            type: string
+          - name: service
+            label: Послуга
+            type: select
+            options:
+              values:
+                - { value: mixing, label: Зведення пісень }
+                - { value: dubmix, label: Зведення дубляжу }
+                - { value: sounddesign, label: Саунд-дизайн }
+                - { value: voiceover, label: Озвучка та дубляж }
+                - { value: podcast, label: Зведення подкастів }
+                - { value: ads, label: Реклама та комерція }
+          - name: demo
+            label: Позначка «Приклад»
+            type: boolean
+            default: false
+
+  - name: about
+    label: Про мене
+    type: file
+    path: content/about.json
+    fields:
+      - name: photo
+        label: Ваше фото
+        description: Вертикальне, приблизно 4:5
+        type: image
+      - name: text_uk
+        label: Розповідь про себе (українською)
+        description: Абзаци розділяйте порожнім рядком
+        type: text
+      - name: text_en
+        label: Розповідь про себе (англійською)
+        type: text
+      - name: facts
+        label: Цифри (досвід, кількість проєктів тощо)
+        type: object
+        list: true
+        fields:
+          - { name: value, label: Цифра (наприклад, 5+), type: string }
+          - { name: label_uk, label: Підпис (українською), type: string }
+          - { name: label_en, label: Підпис (англійською), type: string }
+      - name: projects
+        label: Проєкти та співпраця
+        type: object
+        list: true
+        fields:
+          - { name: name, label: Назва проєкту, студії або каналу, type: string }
+          - { name: role_uk, label: Що ви робили (українською), type: string }
+          - { name: role_en, label: Що ви робили (англійською), type: string }
+          - { name: year, label: Рік, type: string }
+          - { name: link, label: Посилання (необов'язково), type: string }
+      - name: demo
+        label: Позначка «Приклад»
+        description: Вимкніть, коли заповните блок
+        type: boolean
+
+  - name: settings
+    label: Контакти та соцмережі
+    type: file
+    path: content/settings.json
+    fields:
+      - { name: email, label: Пошта, type: string }
+      - { name: telegram, label: Telegram (посилання t.me/...), type: string }
+      - { name: discord, label: Discord, type: string }
+      - { name: youtube, label: YouTube-канал, type: string }
+      - { name: instagram, label: Instagram, type: string }
+      - { name: tiktok, label: TikTok, type: string }
