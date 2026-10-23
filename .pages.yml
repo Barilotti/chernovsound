@@ -154,6 +154,10 @@ content:
         label: Ваше фото
         description: Вертикальне, приблизно 4:5
         type: image
+      - { name: name_uk, label: Ім'я (українською), type: string }
+      - { name: name_en, label: Ім'я (англійською), type: string }
+      - { name: role_uk, label: "Підпис під ім'ям (українською), наприклад «Засновник CHERNOVsound · звукорежисер»", type: string }
+      - { name: role_en, label: Підпис під ім'ям (англійською), type: string }
       - name: text_uk
         label: Розповідь про себе (українською)
         description: Абзаци розділяйте порожнім рядком
@@ -189,6 +193,7 @@ content:
     type: file
     path: content/settings.json
     fields:
+      - { name: contact, label: "Кнопки «Написати» та «Обговорити проєкт» (посилання t.me/...)", type: string }
       - { name: email, label: Пошта, type: string }
       - { name: telegram, label: Telegram (посилання t.me/...), type: string }
       - { name: discord, label: Discord, type: string }

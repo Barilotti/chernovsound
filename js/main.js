@@ -12,6 +12,7 @@
   var LANGS = ["uk", "en"];
 
   var lang = "uk";
+  var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var filter = "all";
 
   /* ---------- допоміжні ---------- */
@@ -56,39 +57,25 @@
     try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) { return null; }
   }
 
-  /* ---------- поява блоків при прокрутці ---------- */
-  var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var io = ("IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
+  /* ---------- плавна поява блоків при прокрутці ---------- */
+  // Клас .reveal ставить лише скрипт: без JS усе видно одразу. Те, що вже вище екрана, не ховаємо.
+  var revealIO = ("IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       if (!e.isIntersecting) return;
       e.target.classList.add("in");
-      io.unobserve(e.target);
-      if (e.target.matches("dt[data-count]")) countUp(e.target);
+      revealIO.unobserve(e.target);
     });
   }, { rootMargin: "0px 0px -8% 0px" }) : null;
 
-  // Елементи з'являються по черзі всередині своєї групи
-  function reveal(nodes) {
-    if (!io) return;
+  // step — затримка між сусідами в групі, щоб вони виходили по черзі
+  function reveal(nodes, step) {
+    if (!revealIO) return;
     nodes.forEach(function (n, i) {
+      if (n.getBoundingClientRect().bottom < 0) return;
       n.classList.add("reveal");
-      n.style.setProperty("--d", (i % 6) * 0.08 + "s");
-      io.observe(n);
+      n.style.setProperty("--d", Math.min(i, 6) * (step || 0.08) + "s");
+      revealIO.observe(n);
     });
-  }
-
-  // Цифри в «Про мене» рахують від нуля: «100+» → 0…100+
-  function countUp(node) {
-    var m = node.dataset.count.match(/^(\D*)(\d+)(.*)$/);
-    if (!m) return;
-    var end = +m[2], t0 = null;
-    function step(ts) {
-      if (!t0) t0 = ts;
-      var k = Math.min(1, (ts - t0) / 1400);
-      node.textContent = m[1] + Math.round(end * (1 - Math.pow(1 - k, 3))) + m[3];
-      if (k < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
   }
 
   /* ---------- мова ---------- */
@@ -108,10 +95,12 @@
     document.documentElement.lang = lang;
     $all("[data-i18n]").forEach(function (n) { var v = t(n.getAttribute("data-i18n")); if (v) n.textContent = v; });
     $all("[data-i18n-placeholder]").forEach(function (n) { n.placeholder = t(n.getAttribute("data-i18n-placeholder")); });
+    $all("[data-i18n-label]").forEach(function (n) { n.setAttribute("aria-label", t(n.getAttribute("data-i18n-label"))); });
     $all(".lang-switch button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.lang === lang)); });
     document.title = t("meta.title");
     setMeta('meta[name="description"]', t("meta.description"));
     setMeta('meta[property="og:locale"]', lang === "uk" ? "uk_UA" : "en_US");
+    startRotator();
     renderFilters();
     renderPortfolio();
     renderReviews();
@@ -126,31 +115,45 @@
     }
   }
 
+  /* ---------- слово в заголовку: пісень → фільмів → аніме … ---------- */
+  var rot = { words: [], i: 0, timer: null };
+  function startRotator() {
+    var node = $("#hero-rotator");
+    if (!node) return;
+    clearInterval(rot.timer);
+    rot.words = t("hero.words").split("|");
+    rot.i = 0;
+    node.className = "rotator";
+    node.textContent = rot.words[0];
+    rot.timer = setInterval(function () {
+      node.className = "rotator out";
+      setTimeout(function () {
+        rot.i = (rot.i + 1) % rot.words.length;
+        node.textContent = rot.words[rot.i];
+        node.className = "rotator";
+        void node.offsetWidth; // перезапуск анімації появи
+        node.className = "rotator in";
+      }, 400);
+    }, 2400);
+  }
+
   $all(".lang-switch button").forEach(function (b) {
     b.addEventListener("click", function () { applyLang(b.dataset.lang, true); });
   });
 
-  /* ---------- меню на телефоні ---------- */
-  var header = $(".site-header");
-  var toggle = $(".menu-toggle");
-  function closeMenu() { header.classList.remove("menu-open"); toggle.setAttribute("aria-expanded", "false"); }
-  toggle.addEventListener("click", function () {
-    var open = header.classList.toggle("menu-open");
-    toggle.setAttribute("aria-expanded", String(open));
-  });
-  $all(".main-nav a").forEach(function (a) { a.addEventListener("click", closeMenu); });
-
   /* ---------- портфоліо ---------- */
   var currentAudio = null;
 
+  // Фільтри лише для послуг, де вже є роботи; якщо така послуга одна, фільтри не потрібні
   function renderFilters() {
     var box = $("#portfolio-filters");
     box.innerHTML = "";
-    ["all"].concat(SERVICES).forEach(function (id) {
-      var count = id === "all" ? PORTFOLIO.length : PORTFOLIO.filter(function (p) { return services(p).indexOf(id) > -1; }).length;
-      var b = el("button", { type: "button", class: "chip", role: "tab", "aria-selected": String(filter === id), "data-id": id });
-      b.appendChild(document.createTextNode(id === "all" ? t("portfolio.all") : t("svc." + id + ".title")));
-      b.appendChild(el("span", { class: "count", text: String(count) }));
+    var used = SERVICES.filter(function (id) { return PORTFOLIO.some(function (p) { return services(p).indexOf(id) > -1; }); });
+    box.hidden = used.length < 2;
+    if (used.indexOf(filter) < 0) filter = "all";
+    ["all"].concat(used).forEach(function (id) {
+      var b = el("button", { type: "button", class: "chip", role: "tab", "aria-selected": String(filter === id), "data-id": id,
+        text: id === "all" ? t("portfolio.all") : t("svc." + id + ".title") });
       b.addEventListener("click", function () { filter = id; renderFilters(); renderPortfolio(); });
       box.appendChild(b);
     });
@@ -173,80 +176,123 @@
     return m + ":" + (s < 10 ? "0" : "") + s;
   }
 
-  // Хвиля: справжня (з файлу) або умовна, якщо файл не вдалося прочитати.
-  var peaksCache = {};
-  function fakePeaks(seed, n) {
-    var out = [], x = 0;
-    for (var i = 0; i < seed.length; i++) x = (x * 31 + seed.charCodeAt(i)) >>> 0;
-    for (var j = 0; j < n; j++) { x = (x * 1103515245 + 12345) >>> 0; out.push(0.25 + 0.75 * Math.abs(Math.sin(j / 5 + (x % 100) / 40)) * ((x % 1000) / 1000 * 0.5 + 0.5)); }
-    return out;
+  function serviceLine(item) {
+    return services(item).map(function (s) { return t("svc." + s + ".title"); }).join(" · ") + (item.year ? " · " + item.year : "");
   }
-  function loadPeaks(src, n) {
-    if (peaksCache[src]) return peaksCache[src];
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    peaksCache[src] = (Ctx && window.fetch ? fetch(src).then(function (r) {
-      if (!r.ok) throw new Error(r.status);
-      return r.arrayBuffer();
-    }).then(function (buf) {
-      var ctx = new Ctx();
-      return new Promise(function (res, rej) { ctx.decodeAudioData(buf, res, rej); }).then(function (audio) {
-        if (ctx.close) ctx.close();
-        var data = audio.getChannelData(0), step = Math.floor(data.length / n), peaks = [], max = 0;
-        for (var i = 0; i < n; i++) {
-          var p = 0;
-          for (var k = i * step; k < (i + 1) * step; k += 16) { var v = Math.abs(data[k]); if (v > p) p = v; }
-          peaks.push(p); if (p > max) max = p;
-        }
-        return peaks.map(function (p) { return 0.12 + 0.88 * (max ? p / max : 0); });
-      });
-    }) : Promise.reject()).catch(function () { return fakePeaks(src, n); });
-    return peaksCache[src];
-  }
+  function isAudio(item) { return !item.type || item.type === "audio"; }
 
-  function drawWave(canvas, peaks, progress) {
-    var dpr = window.devicePixelRatio || 1;
-    var w = canvas.clientWidth, h = canvas.clientHeight;
-    if (!w) return;
-    canvas.width = w * dpr; canvas.height = h * dpr;
-    var c = canvas.getContext("2d");
-    c.scale(dpr, dpr);
-    var n = peaks.length, gap = 2, bw = Math.max(1.5, w / n - gap);
-    for (var i = 0; i < n; i++) {
-      var x = i * (w / n), bh = Math.max(2, peaks[i] * h);
-      c.fillStyle = i / n < progress ? "#eef1f5" : "rgba(185,205,224,0.28)";
-      c.fillRect(x, (h - bh) / 2, bw, bh);
+  // Відео: обкладинка з кнопкою; autoplay — одразу вмикає
+  function mediaBlock(item, autoplay) {
+    var box = el("div", { class: "work-media" });
+    if (item.type === "youtube" || item.type === "gdrive") {
+      var yt = item.type === "youtube", id = yt ? youtubeId(item.youtube) : driveId(item.gdrive);
+      var thumb = url(item.cover) || (id ? (yt ? "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg" : "https://drive.google.com/thumbnail?id=" + id + "&sz=w1280") : "");
+      if (thumb) {
+        var im = el("img", { src: thumb, alt: "", referrerpolicy: "no-referrer" });
+        im.addEventListener("error", function () { im.remove(); });
+        box.appendChild(im);
+      }
+      var start = function () {
+        if (!id) { window.open(yt ? item.youtube : item.gdrive, "_blank", "noopener"); return; }
+        if (currentAudio) currentAudio.pause();
+        box.innerHTML = "";
+        var frame = el("iframe", yt ? {
+          // enablejsapi: плеєр повідомляє, коли грає і коли на паузі (див. «стан відео з YouTube» нижче)
+          src: "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin),
+          title: field(item, "title"), allow: "autoplay; encrypted-media; picture-in-picture", allowfullscreen: ""
+        } : {
+          src: "https://drive.google.com/file/d/" + id + "/preview",
+          title: field(item, "title"), allow: "autoplay; fullscreen", allowfullscreen: ""
+        });
+        if (yt) frame.addEventListener("load", function () {
+          frame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: id, channel: "widget" }), "*");
+        });
+        box.appendChild(frame);
+      };
+      var playBtn = el("button", { type: "button", class: "yt-play", "aria-label": t("portfolio.watch") }, [el("span", null, [icon("i-play")])]);
+      playBtn.addEventListener("click", start);
+      box.appendChild(playBtn);
+      if (autoplay) start();
+      return box;
     }
+    // відеофайл із сайту: фон аналізує його так само, як аудіо
+    var attrs = { src: url(item.video), controls: "", preload: "metadata", playsinline: "" };
+    if (item.cover) attrs.poster = url(item.cover);
+    var video = el("video", attrs);
+    video.addEventListener("play", function () {
+      if (currentAudio && currentAudio !== video) currentAudio.pause();
+      currentAudio = video;
+      document.dispatchEvent(new CustomEvent("cs:audio", { detail: video }));
+    });
+    ["pause", "ended"].forEach(function (ev) {
+      video.addEventListener(ev, function () { document.dispatchEvent(new CustomEvent("cs:audio-stop", { detail: video })); });
+    });
+    box.appendChild(video);
+    if (autoplay) { var pr = video.play(); if (pr && pr.catch) pr.catch(function () {}); }
+    return box;
   }
 
-  function audioPlayer(item) {
-    var hasBefore = !!item.audio_before;
+  /* ---------- роботи: простий список ---------- */
+  // Рядок: кнопка ▶, назва з послугою, праворуч «До / Після» і час.
+  // Поки трек грає, нижня лінія рядка стає прогресом (клік перемотує). Відео розгортається під рядком.
+  var stopActive = null; // зупиняє попередній рядок: аудіо на паузу, відео згортає
+
+  function setPlayIcon(btn, playing) {
+    btn.innerHTML = "";
+    btn.appendChild(icon(playing ? "i-pause" : "i-play"));
+    btn.classList.toggle("playing", playing);
+    btn.setAttribute("aria-label", playing ? t("portfolio.pause") : t("portfolio.play"));
+  }
+
+  function audioRow(item, li, btn, side) {
     var audio = new Audio();
     audio.preload = "metadata";
     var srcAfter = url(item.audio), srcBefore = url(item.audio_before), which = "after";
     audio.src = srcAfter;
+    var time = el("span", { class: "wtime" });
+    var bar = el("span", { class: "wbar" });
+    var prog = el("div", { class: "wprog", "aria-hidden": "true" }, [bar]);
 
-    var btn = el("button", { type: "button", class: "player-btn", "aria-label": t("portfolio.play") }, [icon("i-play")]);
-    var canvas = el("canvas", { class: "wave", "aria-hidden": "true" });
-    var time = el("span", { text: "0:00" });
-    var row = el("div", { class: "player-row" }, [time]);
-    var peaks = fakePeaks(srcAfter, 70);
-
-    function redraw() { drawWave(canvas, peaks, audio.duration ? audio.currentTime / audio.duration : 0); }
-    function setIcon(playing) {
-      btn.innerHTML = ""; btn.appendChild(icon(playing ? "i-pause" : "i-play"));
-      btn.setAttribute("aria-label", playing ? t("portfolio.pause") : t("portfolio.play"));
-      btn.classList.toggle("playing", playing);
+    function stop() { audio.pause(); }
+    function play() {
+      if (stopActive && stopActive !== stop) stopActive();
+      stopActive = stop;
+      currentAudio = audio;
+      // фон блоку «Роботи» (works-bg.js) підхоплює звук; шлемо до play(), поки клік ще рахується жестом
+      document.dispatchEvent(new CustomEvent("cs:audio", { detail: audio }));
+      var pr = audio.play();
+      if (pr && pr.catch) pr.catch(function () {});
     }
-    function loadWave(src) { loadPeaks(src, 70).then(function (p) { peaks = p; redraw(); }); }
+    function stopped() {
+      setPlayIcon(btn, false);
+      li.classList.remove("is-playing");
+      time.textContent = fmt(audio.duration);
+      document.dispatchEvent(new CustomEvent("cs:audio-stop", { detail: audio }));
+    }
+    btn.addEventListener("click", function () { if (audio.paused) play(); else audio.pause(); });
+    audio.addEventListener("play", function () { setPlayIcon(btn, true); li.classList.add("is-playing"); });
+    audio.addEventListener("pause", stopped);
+    audio.addEventListener("ended", stopped);
+    audio.addEventListener("loadedmetadata", function () { if (audio.paused) time.textContent = fmt(audio.duration); });
+    audio.addEventListener("timeupdate", function () {
+      bar.style.transform = "scaleX(" + (audio.duration ? audio.currentTime / audio.duration : 0) + ")";
+      if (!audio.paused) time.textContent = fmt(audio.currentTime);
+    });
+    prog.addEventListener("click", function (e) {
+      if (!audio.duration) return;
+      var r = prog.getBoundingClientRect();
+      audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+    });
 
-    if (hasBefore) {
-      var ab = el("div", { class: "ab", role: "group" });
+    if (item.audio_before) {
+      var ab = el("div", { class: "wab", role: "group", "aria-label": t("portfolio.compare") });
       [["before", "portfolio.before"], ["after", "portfolio.after"]].forEach(function (pair) {
         var b = el("button", { type: "button", "aria-pressed": String(pair[0] === which), text: t(pair[1]) });
         b.addEventListener("click", function () {
           if (which === pair[0]) return;
           which = pair[0];
           $all("button", ab).forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+          placeAbPill(ab);
           var pos = audio.currentTime, playing = !audio.paused;
           audio.src = which === "after" ? srcAfter : srcBefore;
           audio.addEventListener("loadedmetadata", function once() {
@@ -254,122 +300,131 @@
             try { audio.currentTime = Math.min(pos, audio.duration || pos); } catch (e) {}
             if (playing) audio.play();
           });
-          loadWave(audio.src);
         });
         ab.appendChild(b);
       });
-      row.appendChild(ab);
+      ab.insertBefore(el("span", { class: "wab-pill", "aria-hidden": "true" }), ab.firstChild);
+      side.appendChild(ab);
+      // місце плашки відоме лише після того, як рядок потрапив на сторінку і завантажився шрифт
+      requestAnimationFrame(function () { placeAbPill(ab); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { placeAbPill(ab); });
     }
+    side.appendChild(time);
+    li.appendChild(prog);
+  }
 
+  // «До / Після»: біла плашка під обраним варіантом, при перемиканні переїжджає
+  function placeAbPill(ab) {
+    var on = $("button[aria-pressed='true']", ab), pill = $(".wab-pill", ab);
+    if (!on || !pill || !on.offsetWidth) return;
+    var first = !pill.dataset.placed; // першого разу ставимо без анімації, далі — ковзає
+    if (first) pill.style.transition = "none";
+    pill.style.width = on.offsetWidth + "px";
+    pill.style.transform = "translateX(" + (on.offsetLeft - pill.offsetLeft) + "px)";
+    if (first) { void pill.offsetWidth; pill.style.transition = ""; pill.dataset.placed = "1"; }
+  }
+  window.addEventListener("resize", function () { $all(".wab").forEach(placeAbPill); });
+
+  // Відео виїжджає під рядком і так само плавно від'їжджає; після закриття плеєр прибираємо
+  function videoRow(item, li, btn, side) {
+    var drawer = null;
+    side.appendChild(el("span", { class: "wtime", text: t("portfolio.video") }));
+    function close() {
+      if (!drawer) return;
+      var d = drawer;
+      drawer = null;
+      d.classList.remove("open");
+      var gone = function () { d.remove(); };
+      if (calm) gone(); else { d.addEventListener("transitionend", gone, { once: true }); setTimeout(gone, 700); }
+      setPlayIcon(btn, false);
+      li.classList.remove("is-playing");
+    }
     btn.addEventListener("click", function () {
-      if (audio.paused) {
-        if (currentAudio && currentAudio !== audio) currentAudio.pause();
-        currentAudio = audio;
-        audio.play();
-      } else audio.pause();
+      if (drawer) { close(); stopActive = null; return; }
+      if (stopActive) stopActive();
+      stopActive = close;
+      drawer = el("div", { class: "wdrawer" }, [el("div", { class: "wdrawer-in" }, [mediaBlock(item, true)])]);
+      li.appendChild(drawer);
+      void drawer.offsetHeight; // зафіксувати закритий стан, щоб спрацював перехід
+      drawer.classList.add("open");
+      setPlayIcon(btn, true);
+      li.classList.add("is-playing");
     });
-    audio.addEventListener("play", function () { setIcon(true); });
-    audio.addEventListener("pause", function () { setIcon(false); });
-    audio.addEventListener("ended", function () { setIcon(false); });
-    audio.addEventListener("timeupdate", function () { time.textContent = fmt(audio.currentTime) + " / " + fmt(audio.duration); redraw(); });
-    audio.addEventListener("loadedmetadata", function () { time.textContent = "0:00 / " + fmt(audio.duration); });
-    canvas.addEventListener("click", function (e) {
-      if (!audio.duration) return;
-      var r = canvas.getBoundingClientRect();
-      audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
-      redraw();
-    });
-    requestAnimationFrame(redraw);
-    window.addEventListener("resize", redraw);
-    loadWave(srcAfter);
-
-    return el("div", { class: "player" }, [btn, el("div", { class: "player-main" }, [canvas, row])]);
   }
 
-  function mediaBlock(item) {
-    if (item.type === "youtube") {
-      var id = youtubeId(item.youtube);
-      var box = el("div", { class: "work-media" });
-      var thumb = url(item.cover) || (id ? "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg" : "");
-      if (thumb) {
-        var im = el("img", { src: thumb, alt: "", loading: "lazy" });
-        im.addEventListener("error", function () { im.remove(); });
-        box.appendChild(im);
-      }
-      var play = el("button", { type: "button", class: "yt-play", "aria-label": t("portfolio.watch") }, [el("span", null, [icon("i-play")])]);
-      play.addEventListener("click", function () {
-        if (!id) { window.open(item.youtube, "_blank", "noopener"); return; }
-        box.innerHTML = "";
-        box.appendChild(el("iframe", {
-          src: "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0",
-          title: field(item, "title"), allow: "autoplay; encrypted-media; picture-in-picture", allowfullscreen: ""
-        }));
-      });
-      box.appendChild(play);
-      return [box];
-    }
-    if (item.type === "gdrive") {
-      var gid = driveId(item.gdrive);
-      var gbox = el("div", { class: "work-media" });
-      var gthumb = url(item.cover) || (gid ? "https://drive.google.com/thumbnail?id=" + gid + "&sz=w1280" : "");
-      if (gthumb) {
-        var gim = el("img", { src: gthumb, alt: "", loading: "lazy", referrerpolicy: "no-referrer" });
-        gim.addEventListener("error", function () { gim.remove(); });
-        gbox.appendChild(gim);
-      }
-      var gplay = el("button", { type: "button", class: "yt-play", "aria-label": t("portfolio.watch") }, [el("span", null, [icon("i-play")])]);
-      gplay.addEventListener("click", function () {
-        if (!gid) { window.open(item.gdrive, "_blank", "noopener"); return; }
-        if (currentAudio) currentAudio.pause();
-        gbox.innerHTML = "";
-        gbox.appendChild(el("iframe", {
-          src: "https://drive.google.com/file/d/" + gid + "/preview",
-          title: field(item, "title"), allow: "autoplay; fullscreen", allowfullscreen: ""
-        }));
-      });
-      gbox.appendChild(gplay);
-      return [gbox];
-    }
-    if (item.type === "video") {
-      var attrs = { src: url(item.video), controls: "", preload: "metadata", playsinline: "" };
-      if (item.cover) attrs.poster = url(item.cover);
-      return [el("div", { class: "work-media" }, [el("video", attrs)])];
-    }
-    // audio
-    var parts = [];
-    if (item.cover) parts.push(el("div", { class: "work-cover" }, [el("img", { src: url(item.cover), alt: field(item, "title"), loading: "lazy" })]));
-    parts.push(audioPlayer(item));
-    return parts;
-  }
+  var listShown = false; // перший показ — плавна поява при прокрутці, далі (фільтр, мова) рядки в'їжджають збоку
 
   function renderPortfolio() {
+    if (stopActive) { stopActive(); stopActive = null; }
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     var list = $("#portfolio-list");
     list.innerHTML = "";
     var items = PORTFOLIO.filter(function (p) { return filter === "all" || services(p).indexOf(filter) > -1; });
     $("#portfolio-empty").hidden = items.length > 0;
     items.forEach(function (item) {
-      var meta = el("div", { class: "work-meta" });
+      var btn = el("button", { type: "button", class: "wplay", "aria-label": t("portfolio.play") }, [icon("i-play")]);
+      var meta = el("span", { class: "wmeta" });
       if (item.demo) meta.appendChild(el("span", { class: "badge", text: t("portfolio.demo") }));
-      meta.appendChild(el("span", { text: services(item).map(function (s) { return t("svc." + s + ".title"); }).join(" · ") + (item.year ? " · " + item.year : "") }));
-      var body = el("div", { class: "work-body" }, [meta, el("h3", { text: field(item, "title") })]);
-      var desc = field(item, "description");
-      if (desc) body.appendChild(el("p", { text: desc }));
-      list.appendChild(el("article", { class: "work" }, mediaBlock(item).concat([body])));
+      meta.appendChild(el("span", { text: serviceLine(item) }));
+      var side = el("div", { class: "wside" });
+      var li = el("li", { class: "wrow" }, [
+        el("div", { class: "wline" }, [btn, el("div", { class: "winfo" }, [el("h3", { class: "wtitle", text: field(item, "title") }), meta]), side])
+      ]);
+      if (isAudio(item)) audioRow(item, li, btn, side); else videoRow(item, li, btn, side);
+      list.appendChild(li);
     });
-    reveal($all(".work", list));
+    var rows = $all(".wrow", list);
+    if (!listShown) { reveal(rows, 0.06); listShown = true; return; }
+    if (calm) return;
+    rows.forEach(function (r, i) { r.style.setProperty("--d", Math.min(i, 8) * 0.06 + "s"); r.classList.add("slide-in"); });
   }
 
-  // Кнопки «Приклади робіт» у картках послуг вмикають потрібний фільтр
-  $all("[data-filter]").forEach(function (a) {
-    a.addEventListener("click", function () { filter = a.dataset.filter; renderFilters(); renderPortfolio(); });
+  /* ---------- послуги: по колу підсвічується одна, від першої до останньої ---------- */
+  // Під курсором активна та, що під ним, а коло чекає; коло йде лише поки блок видно
+  (function () {
+    var list = $all(".services li");
+    if (!list.length) return;
+    var i = -1, timer = null, hovered = false, visible = false;
+    function activate(li) { list.forEach(function (x) { x.classList.toggle("is-active", x === li); }); }
+    function next() { i = (i + 1) % list.length; activate(list[i]); }
+    function run() {
+      if (timer || hovered || !visible || document.hidden || calm) return;
+      next();
+      timer = setInterval(next, 2600);
+    }
+    function pause() { clearInterval(timer); timer = null; }
+    list.forEach(function (li, k) {
+      li.addEventListener("pointerenter", function () { hovered = true; pause(); i = k; activate(li); });
+      li.addEventListener("pointerleave", function () { hovered = false; activate(null); run(); });
+    });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) pause(); else run(); });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (en) {
+        visible = en[0].isIntersecting;
+        if (visible) run(); else pause();
+      }, { threshold: 0.3 }).observe($(".services"));
+    } else { visible = true; run(); }
+  })();
+
+  /* ---------- стан відео з YouTube ---------- */
+  // Звук із YouTube браузер аналізувати не дає, тому фон (works-bg.js) отримує лише «грає / пауза»
+  window.addEventListener("message", function (e) {
+    if (!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(e.origin)) return;
+    var d;
+    try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+    if (!d) return;
+    var state = d.event === "onStateChange" ? d.info : (d.event === "infoDelivery" && d.info ? d.info.playerState : undefined);
+    // 1 — грає, 2 — пауза, 0 — скінчилось; буферизацію та «не почато» пропускаємо, щоб фон не смикався
+    if (state !== 0 && state !== 1 && state !== 2) return;
+    if (state === 1 && currentAudio) currentAudio.pause();
+    document.dispatchEvent(new CustomEvent("cs:video", { detail: { source: e.source, playing: state === 1 } }));
   });
 
   /* ---------- відгуки ---------- */
   function renderReviews() {
     var list = $("#reviews-list");
     list.innerHTML = "";
-    $("#reviews-empty").hidden = REVIEWS.length > 0;
+    $("#reviews").hidden = REVIEWS.length === 0;
     REVIEWS.forEach(function (r) {
       var top = el("div", { class: "review-top" });
       if (r.rating) {
@@ -393,7 +448,7 @@
       if (r.link) children.push(el("a", { class: "review-link", href: r.link, target: "_blank", rel: "noopener", text: t("reviews.source") + " ↗" }));
       list.appendChild(el("article", { class: "review" }, children));
     });
-    reveal($all(".review", list));
+    reveal($all(".review", list), 0.1);
   }
 
   /* ---------- про мене ---------- */
@@ -411,22 +466,27 @@
     var head = el("div", { class: "about-head" }, [el("p", { class: "eyebrow", text: t("about.eyebrow") })]);
     if (ABOUT.demo) head.appendChild(el("span", { class: "badge", text: t("portfolio.demo") }));
     text.appendChild(head);
-    text.appendChild(el("h2", { id: "about-title", text: t("about.title") }));
-    field(ABOUT, "text").split(/\n\s*\n/).forEach(function (para) {
-      if (para.trim()) text.appendChild(el("p", { class: "about-para", text: para.trim() }));
+    // Ім'я великим, під ним підпис; без імені в адмінці — старий заголовок
+    var name = field(ABOUT, "name");
+    text.appendChild(el("h2", { id: "about-title", class: "about-name", text: name || t("about.title") }));
+    var role = field(ABOUT, "role");
+    if (role) text.appendChild(el("p", { class: "about-role", text: role }));
+    // Перший абзац — вступ, крупніше
+    field(ABOUT, "text").split(/\n\s*\n/).filter(function (p) { return p.trim(); }).forEach(function (para, k) {
+      text.appendChild(el("p", { class: k ? "about-para" : "about-para about-lead", text: para.trim() }));
     });
 
     var facts = (ABOUT.facts || []).filter(function (f) { return f && f.value; });
     if (facts.length) {
-      text.appendChild(el("dl", { class: "facts" }, facts.map(function (f) {
-        var dt = el("dt", { text: f.value });
-        if (io && /\d/.test(f.value)) {
-          dt.setAttribute("data-count", f.value);
-          dt.textContent = f.value.replace(/\d+/, "0");
-        }
-        return el("div", { class: "fact" }, [dt, el("dd", { text: field(f, "label") })]);
-      })));
+      var dl = el("dl", { class: "facts" }, facts.map(function (f) {
+        return el("div", { class: "fact" }, [el("dt", { text: f.value, "data-value": f.value }), el("dd", { text: field(f, "label") })]);
+      }));
+      text.appendChild(dl);
+      countFacts(dl);
     }
+    var write = el("a", { class: "about-write", href: SETTINGS.contact || "https://t.me/ukrainskiygul", target: "_blank", rel: "noopener", "data-contact": "" },
+      [el("span", { text: t("about.write") }), icon("i-arrow", "ico")]);
+    text.appendChild(write);
 
     var projects = (ABOUT.projects || []).filter(function (p) { return p && p.name; });
     if (projects.length) {
@@ -441,8 +501,32 @@
     }
     box.appendChild(photo);
     box.appendChild(text);
-    reveal([photo, text]);
-    $all("dt[data-count]", box).forEach(function (d) { io.observe(d); });
+    reveal([photo, text], 0.15);
+  }
+
+  // Цифри «5+», «100+» один раз рахують від нуля, коли блок уперше видно (при зміні мови — одразу готові)
+  var factsCounted = false;
+  function countFacts(dl) {
+    if (factsCounted || calm || !("IntersectionObserver" in window)) return;
+    var dts = $all("dt", dl).filter(function (d) { return /\d/.test(d.dataset.value); });
+    dts.forEach(function (d) { d.textContent = d.dataset.value.replace(/\d+/, "0"); });
+    var io = new IntersectionObserver(function (en) {
+      if (!en[0].isIntersecting) return;
+      io.disconnect();
+      factsCounted = true;
+      var t0 = null;
+      function step(ts) {
+        if (!t0) t0 = ts;
+        var k = Math.min(1, (ts - t0) / 1600), e = 1 - Math.pow(1 - k, 3);
+        dts.forEach(function (d) {
+          var m = d.dataset.value.match(/^(\D*)(\d+)(.*)$/);
+          d.textContent = m[1] + Math.round(+m[2] * e) + m[3];
+        });
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }, { threshold: 0.6 });
+    io.observe(dl);
   }
 
   /* ---------- соцмережі ---------- */
@@ -460,34 +544,16 @@
     if (SETTINGS.email) socials.appendChild(el("a", { href: "mailto:" + SETTINGS.email, "aria-label": "Email" }, [icon("i-mail")]));
   }
 
-  /* ---------- хвиля в блоці з цитатою ---------- */
-  (function () {
-    var c = $("#closing-wave");
-    if (!c || !c.getContext) return;
-    var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var t0 = 0;
-    function frame(ts) {
-      var dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
-      if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
-      var g = c.getContext("2d");
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      g.clearRect(0, 0, w, h);
-      var n = Math.floor(w / 6), time = (ts || 0) / 1000;
-      for (var i = 0; i < n; i++) {
-        var x = i * 6, u = i / n;
-        var env = Math.pow(Math.sin(Math.PI * u), 1.5) * (0.35 + 0.65 * Math.abs(Math.sin(u * 9 + time * 0.6)));
-        var bh = Math.max(2, env * h * (0.55 + 0.45 * Math.abs(Math.sin(i * 1.7 + time * 1.3))));
-        g.fillStyle = "rgba(185,205,224," + (0.08 + 0.22 * env) + ")";
-        g.fillRect(x, (h - bh) / 2, 2, bh);
-      }
-      if (!still) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-    if (still) window.addEventListener("resize", function () { frame(t0); });
-  })();
+  // Кнопки «Написати» / «Обговорити проєкт»: Telegram для зв'язку з адмінки, інакше той, що в index.html
+  function renderContact() {
+    if (!SETTINGS.contact) return;
+    $all("[data-contact]").forEach(function (a) { a.href = SETTINGS.contact; });
+  }
 
   /* ---------- старт ---------- */
   function load(path) {
+    // Автономна копія сайту (один HTML-файл) кладе вміст content/*.json прямо в сторінку
+    if (window.CS_CONTENT && window.CS_CONTENT[path]) return Promise.resolve(window.CS_CONTENT[path]);
     return fetch(path, { cache: "no-cache" })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .catch(function () { return null; });
@@ -501,10 +567,11 @@
       REVIEWS = (res[2] && res[2].items) || [];
       ABOUT = res[3];
       renderSocials();
+      renderContact();
       applyLang(lang, false);
-      $all(".section-head").forEach(function (h) { reveal([h]); });
-      reveal($all(".svc"));
-      reveal($all(".why-row > *"));
-      reveal($all(".closing .quote"));
+      $all(".section-title").forEach(function (h) { reveal([h]); });
+      reveal($all("#portfolio-filters"));
+      reveal($all(".services li"), 0.07);
+      reveal($all(".contact-inner > *"), 0.1);
     });
 })();
