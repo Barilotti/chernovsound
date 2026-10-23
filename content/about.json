@@ -19,13 +19,6 @@
       "label_en": "areas of sound work"
     }
   ],
-  "projects": [
-    {
-      "name": "Назва проєкту, студії або каналу",
-      "role_uk": "Що ви робили: зведення, озвучка, саунд-дизайн",
-      "role_en": "What you did: mixing, voiceover, sound design",
-      "year": "2025"
-    }
-  ],
-  "demo": true
+  "projects": [],
+  "demo": false
 }
