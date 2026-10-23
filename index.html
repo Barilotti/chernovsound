@@ -5,8 +5,10 @@
   <!-- Без JavaScript (напр. перегляд файлу в Telegram на iPhone) лишається клас no-js і статична версія -->
   <script>document.documentElement.classList.remove("no-js");</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>CHERNOVsound: звукорежисер, зведення пісень і подкастів, озвучка аніме, дубляж, саунд-дизайн</title>
-  <meta name="description" content="Звукорежисер CHERNOVsound: зведення та мастеринг пісень, зведення подкастів і дубляжу, саунд-дизайн для фільмів і аніме, озвучка аніме, реклами та YouTube. Портфоліо та відгуки.">
+  <title>Микита Чернов (CHERNOVsound): звукорежисер, зведення, дубляж, саунд-дизайн</title>
+  <meta name="description" content="Звукорежисер Микита Чернов (CHERNOVsound): зведення та мастеринг пісень, зведення подкастів і дубляжу, саунд-дизайн для фільмів і аніме, озвучка. Портфоліо та відгуки.">
+  <meta name="author" content="Микита Чернов (Mykyta Chernov)">
+  <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#0a0b0d">
   <link rel="canonical" href="https://barilotti.github.io/chernovsound/">
   <link rel="alternate" hreflang="uk" href="https://barilotti.github.io/chernovsound/">
@@ -26,35 +28,66 @@
   <meta property="og:locale" content="uk_UA">
   <meta property="og:locale:alternate" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CHERNOVsound: звук, який розповідає історії">
+  <meta name="twitter:description" content="Зведення пісень, подкастів і дубляжу, саунд-дизайн, озвучка аніме та реклами.">
 
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="images/og-image.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Montserrat:wght@300;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=41">
+  <link rel="stylesheet" href="css/style.css?v=42">
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    "name": "CHERNOVsound",
-    "description": "Звукорежисура, зведення та мастеринг пісень, зведення подкастів і дубляжу, саунд-дизайн, озвучка аніме та реклами.",
-    "url": "https://barilotti.github.io/chernovsound/",
-    "image": "https://barilotti.github.io/chernovsound/images/og-image.jpg",
-    "areaServed": "Worldwide",
-    "availableLanguage": ["uk", "en"],
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "Послуги",
-      "itemListElement": [
-        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Зведення та мастеринг пісень"}},
-        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Зведення дубляжу"}},
-        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Саунд-дизайн для фільмів, аніме та ігор"}},
-        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Озвучка та дубляж, зокрема озвучка аніме"}},
-        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Зведення подкастів"}},
-        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Озвучка реклами"}}
-      ]
-    }
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://barilotti.github.io/chernovsound/#website",
+        "url": "https://barilotti.github.io/chernovsound/",
+        "name": "CHERNOVsound",
+        "inLanguage": ["uk", "en"],
+        "publisher": {"@id": "https://barilotti.github.io/chernovsound/#nick"}
+      },
+      {
+        "@type": "Person",
+        "@id": "https://barilotti.github.io/chernovsound/#nick",
+        "name": "Микита Чернов",
+        "alternateName": ["Mykyta Chernov", "CHERNOVsound"],
+        "jobTitle": "Звукорежисер",
+        "url": "https://barilotti.github.io/chernovsound/",
+        "image": "https://barilotti.github.io/chernovsound/media/photo_2026-10-23_15-35-30.jpg",
+        "sameAs": ["https://t.me/ukrainskiygul"],
+        "knowsAbout": ["Зведення пісень", "Мастеринг", "Зведення подкастів", "Зведення дубляжу", "Саунд-дизайн", "Озвучка", "Дубляж аніме"],
+        "worksFor": {"@id": "https://barilotti.github.io/chernovsound/#studio"}
+      },
+      {
+        "@type": "ProfessionalService",
+        "@id": "https://barilotti.github.io/chernovsound/#studio",
+        "name": "CHERNOVsound",
+        "description": "Звукорежисура, зведення та мастеринг пісень, зведення подкастів і дубляжу, саунд-дизайн, озвучка аніме та реклами.",
+        "url": "https://barilotti.github.io/chernovsound/",
+        "image": "https://barilotti.github.io/chernovsound/images/og-image.jpg",
+        "logo": "https://barilotti.github.io/chernovsound/images/logo.png",
+        "founder": {"@id": "https://barilotti.github.io/chernovsound/#nick"},
+        "sameAs": ["https://t.me/ukrainskiygul"],
+        "areaServed": "Worldwide",
+        "availableLanguage": ["uk", "en"],
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Послуги",
+          "itemListElement": [
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Зведення та мастеринг пісень"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Зведення дубляжу"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Саунд-дизайн для фільмів, аніме та ігор"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Озвучка та дубляж, зокрема озвучка аніме"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Зведення подкастів"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Реклама та комерція: озвучка й звук для реклами"}}
+          ]
+        }
+      }
+    ]
   }
   </script>
 </head>
@@ -212,9 +245,9 @@
     </div>
   </footer>
 
-  <script src="js/i18n.js?v=41"></script>
-  <script src="js/main.js?v=41"></script>
-  <script src="js/hero.js?v=41"></script>
-  <script src="js/works-bg.js?v=41"></script>
+  <script src="js/i18n.js?v=42"></script>
+  <script src="js/main.js?v=42"></script>
+  <script src="js/hero.js?v=42"></script>
+  <script src="js/works-bg.js?v=42"></script>
 </body>
 </html>

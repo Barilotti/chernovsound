@@ -100,6 +100,12 @@
     document.title = t("meta.title");
     setMeta('meta[name="description"]', t("meta.description"));
     setMeta('meta[property="og:locale"]', lang === "uk" ? "uk_UA" : "en_US");
+    // Кожна мовна версія вказує сама на себе (інакше Google вважає англійську копією української)
+    var pageUrl = "https://barilotti.github.io/chernovsound/" + (lang === "uk" ? "" : "?lang=" + lang);
+    var canon = $('link[rel="canonical"]'); if (canon) canon.setAttribute("href", pageUrl);
+    setMeta('meta[property="og:url"]', pageUrl);
+    setMeta('meta[property="og:title"]', t("meta.og"));
+    setMeta('meta[name="twitter:title"]', t("meta.og"));
     startRotator();
     renderFilters();
     renderPortfolio();
@@ -188,7 +194,7 @@
       var yt = item.type === "youtube", id = yt ? youtubeId(item.youtube) : driveId(item.gdrive);
       var thumb = url(item.cover) || (id ? (yt ? "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg" : "https://drive.google.com/thumbnail?id=" + id + "&sz=w1280") : "");
       if (thumb) {
-        var im = el("img", { src: thumb, alt: "", referrerpolicy: "no-referrer" });
+        var im = el("img", { src: thumb, alt: field(item, "title") || "", loading: "lazy", referrerpolicy: "no-referrer" });
         im.addEventListener("error", function () { im.remove(); });
         box.appendChild(im);
       }
@@ -459,7 +465,7 @@
     if (!ABOUT) return;
 
     var photo = ABOUT.photo
-      ? el("img", { class: "about-photo", src: url(ABOUT.photo), alt: "CHERNOVsound", loading: "lazy" })
+      ? el("img", { class: "about-photo", src: url(ABOUT.photo), alt: (field(ABOUT, "name") || "CHERNOVsound") + ", " + (field(ABOUT, "role") || "CHERNOVsound"), loading: "lazy" })
       : el("div", { class: "about-photo about-photo-empty", "aria-hidden": "true" }, [icon("i-logo")]);
 
     var text = el("div", { class: "about-text" });

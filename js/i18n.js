@@ -6,8 +6,9 @@
  */
 window.I18N = {
   uk: {
-    "meta.title": "CHERNOVsound: звукорежисер, зведення пісень і подкастів, озвучка аніме, дубляж, саунд-дизайн",
-    "meta.description": "Звукорежисер CHERNOVsound: зведення та мастеринг пісень, зведення подкастів і дубляжу, саунд-дизайн для фільмів і аніме, озвучка аніме, реклами та YouTube. Портфоліо та відгуки.",
+    "meta.title": "Микита Чернов (CHERNOVsound): звукорежисер, зведення, дубляж, саунд-дизайн",
+    "meta.og": "CHERNOVsound: звук, який розповідає історії",
+    "meta.description": "Звукорежисер Микита Чернов (CHERNOVsound): зведення та мастеринг пісень, зведення подкастів і дубляжу, саунд-дизайн для фільмів і аніме, озвучка. Портфоліо та відгуки.",
 
     "nav.portfolio": "Роботи",
     "nav.services": "Послуги",
@@ -66,8 +67,9 @@ window.I18N = {
   },
 
   en: {
-    "meta.title": "CHERNOVsound: sound engineer for music and podcast mixing, anime voiceover, dubbing and sound design",
-    "meta.description": "CHERNOVsound sound engineer: song mixing and mastering, podcast and dubbing mix, sound design for film and anime, anime voiceover, voiceover for ads and YouTube. Portfolio and reviews.",
+    "meta.title": "Mykyta Chernov (CHERNOVsound): sound engineer, mixing, dubbing, sound design",
+    "meta.og": "CHERNOVsound: sound that tells stories",
+    "meta.description": "Sound engineer Mykyta Chernov (CHERNOVsound): song mixing and mastering, podcast and dubbing mix, sound design for film and anime, voiceover. Portfolio and reviews.",
 
     "nav.portfolio": "Work",
     "nav.services": "Services",
